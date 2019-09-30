@@ -1,5 +1,5 @@
-# Kamangar, Farhad
-# 1000-123-456
+# Tisbi, Seth-Amittai
+# 1000-846-338
 # 2019-09-22
 # Assignment-01-02
 
