@@ -115,29 +115,32 @@ class Hebbian(object):
         for epoch in range(num_epochs):
             for sample in range(0, X.shape[1], batch_size):
                 # Get a sample (column from X and Y) where the size of the sample is given by the batch size
-                sampleX = np.transpose(np.array([X[:, sample: sample + batch_size]]))
-                sampleY = np.transpose(np.array([y[:, sample: sample + batch_size]]))
+                sampleX = X[:, sample: sample + batch_size]
+                sampleY = y[sample:sample + batch_size]
 
-                # Get the results
+                # Get the prediction
                 results = self.predict(sampleX)
 
-                # Calculate t - a
+                # Calculate e
                 e = np.subtract(sampleY, results)
 
-                # Calculate e * p, where p is the input
+                # Calculate e dot p, where p is the input matrix
                 ep = np.dot(e, np.transpose(sampleX))
 
-                # Add in the learning rate
-                epa = np.multiply(alpha, ep)
+                # Multiply this new matrix by the scalar alpha
+                rate = np.multiply(alpha, ep)
 
-                # Add this to the old weights without the bias
-                weights = np.add(self.weights[:, 1:], epa)
+                # Calculate the new weights without the bias
+                newWeights = np.add(self.weights[:, 1:], rate)
 
-                # Calculate bias + e
-                bias = np.add(self.weights[:, :1], e)
+                # The first column of the weight matrix is the bias
+                bias_rate = np.multiply(alpha, e)
 
-                # Attach the bias to the weights to give the new weights
-                self.weights = np.append(bias, weights, axis=1)
+                # Add the old bias to this new scaled version of e
+                bias = np.add(np.transpose(np.array([self.weights[:, 0]])), bias_rate)
+
+                # Add the bias back into the weights
+                self.weights = np.append(bias, newWeights, axis=1)
 
                 print("Weights***************:\n", self.weights, "\n**********************\n")
 
@@ -182,14 +185,14 @@ if __name__ == "__main__":
     y_test = y_test[0:number_of_test_samples_to_use]
     number_of_images_to_view=16
     test_x=X_train_vectorized[:,0:number_of_images_to_view].T.reshape((number_of_images_to_view,28,28))
-    display_images(test_x)
+    # display_images(test_x)
     input_dimensions=X_test_vectorized.shape[0]
     model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
                     transfer_function="Hard_limit",seed=5)
     # model.initialize_all_weights_to_zeros()
     # percent_error=[]
     for k in range (10):
-        model.train(X_train_vectorized, y_train,batch_size=100, num_epochs=2, alpha=0.1,gamma=0.1,learning="Delta")
+        model.train(X_train_vectorized, y_train,batch_size=1, num_epochs=2, alpha=0.1,gamma=0.1,learning="Delta")
     #     percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
     # print("******  Percent Error ******\n",percent_error)
     # confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
