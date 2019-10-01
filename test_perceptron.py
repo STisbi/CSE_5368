@@ -54,7 +54,7 @@ def test_error_calculation():
     error = []
     for k in range(20):
         model.train(X_train, Y_train, num_epochs=1, alpha=0.0001)
-        print(model.calculate_percent_error(X_train, Y_train))
+        print("TEST:", model.calculate_percent_error(X_train, Y_train))
         error.append(model.calculate_percent_error(X_train, Y_train))
     np.testing.assert_allclose(error,
                                [0.25, 0.5, 0.5, 0.25, 0.25, 0.25, 0.5, 0.25, 0.25, 0.25, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0,
