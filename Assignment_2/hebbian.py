@@ -1,6 +1,6 @@
-# Kamangar, Farhad
-# 1000-123-456
-# 2019-09-22
+# Tisbi, Seth-Amittai
+# 1000-846-338
+# 2019-10-06
 # Assignment-02-01
 
 import numpy as np
@@ -11,39 +11,39 @@ import tensorflow as tf
 
 
 def display_images(images):
-	# This function displays images on a grid.
-	# Farhad Kamangar Sept. 2019
-	number_of_images=images.shape[0]
-	number_of_rows_for_subplot=int(np.sqrt(number_of_images))
-	number_of_columns_for_subplot=int(np.ceil(number_of_images/number_of_rows_for_subplot))
-	for k in range(number_of_images):
-		plt.subplot(number_of_rows_for_subplot,number_of_columns_for_subplot,k+1)
-		plt.imshow(images[k], cmap=plt.get_cmap('gray'))
-		# plt.imshow(images[k], cmap=pyplot.get_cmap('gray'))
-	plt.show()
+    # This function displays images on a grid.
+    # Farhad Kamangar Sept. 2019
+    number_of_images=images.shape[0]
+    number_of_rows_for_subplot=int(np.sqrt(number_of_images))
+    number_of_columns_for_subplot=int(np.ceil(number_of_images/number_of_rows_for_subplot))
+    for k in range(number_of_images):
+        plt.subplot(number_of_rows_for_subplot,number_of_columns_for_subplot,k+1)
+        plt.imshow(images[k], cmap=plt.get_cmap('gray'))
+        # plt.imshow(images[k], cmap=pyplot.get_cmap('gray'))
+    plt.show()
 
 def display_numpy_array_as_table(input_array):
-	# This function displays a 1d or 2d numpy array (matrix).
-	# Farhad Kamangar Sept. 2019
-	if input_array.ndim==1:
-		num_of_columns,=input_array.shape
-		temp_matrix=input_array.reshape((1, num_of_columns))
-	elif input_array.ndim>2:
-		print("Input matrix dimension is greater than 2. Can not display as table")
-		return
-	else:
-		temp_matrix=input_array
-	number_of_rows,num_of_columns = temp_matrix.shape
-	plt.figure()
-	tb = plt.table(cellText=np.round(temp_matrix,2), loc=(0,0), cellLoc='center')
-	for cell in tb.properties()['child_artists']:
-	    cell.set_height(1/number_of_rows)
-	    cell.set_width(1/num_of_columns)
+    # This function displays a 1d or 2d numpy array (matrix).
+    # Farhad Kamangar Sept. 2019
+    if input_array.ndim==1:
+        num_of_columns,=input_array.shape
+        temp_matrix=input_array.reshape((1, num_of_columns))
+    elif input_array.ndim>2:
+        print("Input matrix dimension is greater than 2. Can not display as table")
+        return
+    else:
+        temp_matrix=input_array
+    number_of_rows,num_of_columns = temp_matrix.shape
+    plt.figure()
+    tb = plt.table(cellText=np.round(temp_matrix,2), loc=(0,0), cellLoc='center')
+    for cell in tb.properties()['child_artists']:
+        cell.set_height(1/number_of_rows)
+        cell.set_width(1/num_of_columns)
 
-	ax = plt.gca()
-	ax.set_xticks([])
-	ax.set_yticks([])
-	plt.show()
+    ax = plt.gca()
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.show()
 class Hebbian(object):
     def __init__(self, input_dimensions=2,number_of_classes=4,transfer_function="Hard_limit",seed=None):
         """
@@ -60,27 +60,38 @@ class Hebbian(object):
         self.number_of_classes=number_of_classes
         self.transfer_function=transfer_function
         self._initialize_weights()
+
     def _initialize_weights(self):
-        """
-        Initialize the weights, initalize using random numbers.
-        Note that number of neurons in the model is equal to the number of classes
-        """
+        # Create a Sx(R+1) list of random numbers from the normal distribution. The plus one in column 1 is for the bias
+        weights = [[np.random.normal() for column in range(self.input_dimensions + 1)] for row in
+                   range(self.number_of_classes)]
+
+        # Create a numpy array with this list
+        self.weights = np.array(weights)
+
     def initialize_all_weights_to_zeros(self):
-        """
-        Initialize the weights, initalize using random numbers.
-        """
+        # Create a Sx(R+1) numpy array filled with zero's
+        self.weights = np.zeros((self.number_of_classes, self.input_dimensions + 1))
+
     def predict(self, X):
-        """
-        Make a prediction on an array of inputs
-        :param X: Array of input [input_dimensions,n_samples]. Note that the input X does not include a row of ones
-        as the first row.
-        :return: Array of model outputs [number_of_classes ,n_samples]. This array is a numerical array.
-        """
+        # Add this list (made into a numpy array) as the first row of the input matrix
+        newX = np.vstack((np.array([1 for column in range(X.shape[1])]), X))
+
+        # Multiply the weight matrix, W, by the input matrix X
+        results = np.dot(self.weights, newX)
+
+        for rowIndex, row in enumerate(results):
+            for columnIndex, column in enumerate(row):
+                if results[rowIndex][columnIndex] < 0:
+                    results[rowIndex][columnIndex] = 0
+                else:
+                    results[rowIndex][columnIndex] = 1
+
+        return results
 
     def print_weights(self):
-        """
-        This function prints the weight matrix (Bias is included in the weight matrix).
-        """
+        print(self.weights)
+
     def train(self, X, y, batch_size=1,num_epochs=10,  alpha=0.1,gamma=0.9,learning="Delta"):
         """
         Given a batch of data, and the necessary hyperparameters,
@@ -97,7 +108,40 @@ class Hebbian(object):
         :return: None
         """
 
+        print("X:\n", X, "\n**\n")
+        print("y:\n", y, "\n**\n")
 
+        # Iterate through an epoch then by sample
+        for epoch in range(num_epochs):
+            for sample in range(0, X.shape[1], batch_size):
+                # Get a sample (column from X and Y) where the size of the sample is given by the batch size
+                sampleX = np.transpose(np.array([X[:, sample: sample + batch_size]]))
+                sampleY = np.transpose(np.array([y[:, sample: sample + batch_size]]))
+
+                # Get the results
+                results = self.predict(sampleX)
+
+                # Calculate t - a
+                e = np.subtract(sampleY, results)
+
+                # Calculate e * p, where p is the input
+                ep = np.dot(e, np.transpose(sampleX))
+
+                # Add in the learning rate
+                epa = np.multiply(alpha, ep)
+
+                # Add this to the old weights without the bias
+                weights = np.add(self.weights[:, 1:], epa)
+
+                # Calculate bias + e
+                bias = np.add(self.weights[:, :1], e)
+
+                # Attach the bias to the weights to give the new weights
+                self.weights = np.append(bias, weights, axis=1)
+
+                print("Weights***************:\n", self.weights, "\n**********************\n")
+
+        print("Done.")
 
     def calculate_percent_error(self,X, y):
         """
@@ -143,10 +187,10 @@ if __name__ == "__main__":
     model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
                     transfer_function="Hard_limit",seed=5)
     # model.initialize_all_weights_to_zeros()
-    percent_error=[]
+    # percent_error=[]
     for k in range (10):
-        model.train(X_train_vectorized, y_train,batch_size=300, num_epochs=2, alpha=0.1,gamma=0.1,learning="Delta")
-        percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
-    print("******  Percent Error ******\n",percent_error)
-    confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
-    print(np.array2string(confusion_matrix, separator=","))
+        model.train(X_train_vectorized, y_train,batch_size=100, num_epochs=2, alpha=0.1,gamma=0.1,learning="Delta")
+    #     percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
+    # print("******  Percent Error ******\n",percent_error)
+    # confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
+    # print(np.array2string(confusion_matrix, separator=","))

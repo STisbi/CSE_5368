@@ -46,16 +46,19 @@ class Perceptron(object):
                 e = np.subtract(sampleY, results)
 
                 # Calculate e dot p, where p is the input matrix
-                ep = np.dot(e, np.reshape(sampleX, np.transpose(e).shape))
+                ep = np.dot(e, np.transpose(sampleX))
 
                 # Multiply this new matrix by the scalar alpha
                 rate = np.multiply(alpha, ep)
 
-                # Calculate the new weights
-                newWeights = np.add(np.delete(self.weights, 0, axis=1), rate)
+                # Calculate the new weights without the bias
+                newWeights = np.add(self.weights[:, 1:], rate)
 
                 # The first column of the weight matrix is the bias
-                bias = np.add(np.transpose(np.array([self.weights[:, 0]])), e)
+                bias_rate = np.multiply(alpha, e)
+
+                # Add the old bias to this new scaled version of e
+                bias = np.add(np.transpose(np.array([self.weights[:, 0]])), bias_rate)
 
                 # Add the bias back into the weights
                 self.weights = np.append(bias, newWeights, axis=1)
@@ -70,7 +73,7 @@ class Perceptron(object):
 
         for rowIndex, row in enumerate(results):
             for columnIndex, column in enumerate(row):
-                if results[rowIndex][columnIndex] < 0:
+                if results[rowIndex][columnIndex] <= 0:
                     results[rowIndex][columnIndex] = 0
                 else:
                     results[rowIndex][columnIndex] = 1

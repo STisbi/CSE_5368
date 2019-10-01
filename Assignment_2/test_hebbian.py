@@ -1,7 +1,7 @@
-# Kamangar, Farhad
-# 1000-123-456
-# 2019-09-22
-# Assignment-02-02
+# Tisbi, Seth-Amittai
+# 1000-846-338
+# 2019-10-06
+# Assignment-02-01
 
 import numpy as np
 import pytest
