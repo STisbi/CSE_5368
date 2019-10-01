@@ -4,8 +4,7 @@
 # Assignment-01-02
 
 import numpy as np
-import pytest
-from perceptron import Perceptron
+from Assignment_1.perceptron import Perceptron
 
 
 def test_weight_dimension():
