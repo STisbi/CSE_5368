@@ -80,14 +80,16 @@ class Hebbian(object):
         # Multiply the weight matrix, W, by the input matrix X
         results = np.dot(self.weights, newX)
 
-        for rowIndex, row in enumerate(results):
-            for columnIndex, column in enumerate(row):
-                if results[rowIndex][columnIndex] < 0:
-                    results[rowIndex][columnIndex] = 0
-                else:
-                    results[rowIndex][columnIndex] = 1
+        if self.transfer_function == "Hard_limit":
+            actualResults = np.where(results < 0, 0, 1)
+        elif self.transfer_function == "Linear":
+            actualResults = results
+        elif self.transfer_function == "Sigmoid":
+            actualResults = 1 / (1 + np.exp(-results))
+            # actualResults[np.where(actualResults == np.max(actualResults))] = 1
+            # actualResults[np.where(actualResults != 1)] = 0
 
-        return results
+        return actualResults
 
     def print_weights(self):
         print(self.weights)
@@ -108,45 +110,71 @@ class Hebbian(object):
         :return: None
         """
 
-        print("X:\n", X, "\n**\n")
-        print("y:\n", y, "\n**\n")
-
         # Iterate through an epoch then by sample
         for epoch in range(num_epochs):
             for sample in range(0, X.shape[1], batch_size):
+                end_column = sample + batch_size
+
+                # There aren't enough elements left for the batch size given
+                # so just use what's left
+                if end_column > X.shape[1]:
+                    end_column = X.shape[1]
+
                 # Get a sample (column from X and Y) where the size of the sample is given by the batch size
-                sampleX = X[:, sample: sample + batch_size]
-                sampleY = y[sample:sample + batch_size]
+                sampleX = X[:, sample : end_column]
+                sampleY = y[sample : end_column]
+
+                # Convert the sample Y into a one hot vector or matrix
+                oneHot = self.toOneHot(sampleY)
 
                 # Get the prediction
                 results = self.predict(sampleX)
 
-                # Calculate e
-                e = np.subtract(sampleY, results)
+                if learning == "Delta":
+                    # Calculate e
+                    e = np.subtract(oneHot, results)
 
-                # Calculate e dot p, where p is the input matrix
-                ep = np.dot(e, np.transpose(sampleX))
+                    # Add a row of one's to the top of the input matrix
+                    newX = np.vstack((np.array([1 for column in range(sampleX.shape[1])]), sampleX))
 
-                # Multiply this new matrix by the scalar alpha
-                rate = np.multiply(alpha, ep)
+                    # Calculate e dot p, where p is the input matrix
+                    ep = np.dot(e, np.transpose(newX))
 
-                # Calculate the new weights without the bias
-                newWeights = np.add(self.weights[:, 1:], rate)
+                    # Multiply this new matrix by the scalar alpha
+                    rate = np.multiply(alpha, ep)
 
-                # The first column of the weight matrix is the bias
-                bias_rate = np.multiply(alpha, e)
+                    # Calculate the new weights along with the bias
+                    self.weights = np.add(self.weights, rate)
 
-                # Add the old bias to this new scaled version of e
-                bias = np.add(np.transpose(np.array([self.weights[:, 0]])), bias_rate)
+                elif learning == "Filtered":
+                    # Add a row of one's to the top of the input matrix
+                    newX = np.vstack((np.array([1 for column in range(sampleX.shape[1])]), sampleX))
 
-                # Add the bias back into the weights
-                self.weights = np.append(bias, newWeights, axis=1)
+                    # Calculate e dot p, where p is the input matrix
+                    ep = np.dot(oneHot, np.transpose(newX))
 
-                print("Weights***************:\n", self.weights, "\n**********************\n")
+                    # Multiply this new matrix by the scalar alpha
+                    rate = np.multiply(alpha, ep)
 
-        print("Done.")
+                    # Multiply the old weights by some scalar gamma
+                    oldWeightMod = np.multiply(1 - gamma, self.weights)
 
-    def calculate_percent_error(self,X, y):
+                    self.weights = np.add(oldWeightMod, rate)
+
+                elif learning == "Unsupervised_hebb":
+                    # Add a row of one's to the top of the input matrix
+                    newX = np.vstack((np.array([1 for column in range(sampleX.shape[1])]), sampleX))
+
+                    # Calculate e dot p, where p is the input matrix
+                    ep = np.dot(results, np.transpose(newX))
+
+                    # Multiply this new matrix by the scalar alpha
+                    rate = np.multiply(alpha, ep)
+
+                    # Calculate the new weights along with the bias
+                    self.weights = np.add(self.weights, rate)
+
+    def calculate_percent_error(self, X, y):
         """
         Given a batch of data this function calculates percent error.
         For each input sample, if the predicted class output is not the same as the desired class,
@@ -156,6 +184,38 @@ class Hebbian(object):
         the desired (true) class.
         :return percent_error
         """
+        numErrors = 0
+
+        for sample in range(X.shape[1]):
+            # Get the nth column from both the input and expected output
+            sampleX = np.transpose(np.array([X[:, sample]]))
+            sampleY = np.transpose(np.array([y[sample]]))
+
+            # Convert the sample Y into a one hot vector or matrix
+            oneHot = self.toOneHot(sampleY)
+
+            results = self.predict(sampleX)
+
+            if self.transfer_function == "Hard_limit":
+                pass
+            elif self.transfer_function == "Linear":
+                results[np.where(results == np.max(results))] = 1
+                results[np.where(results != 1)] = 0
+            elif self.transfer_function == "Sigmoid":
+                results[np.where(results == np.max(results))] = 1
+                results[np.where(results != 1)] = 0
+
+            if results[sampleY, 0] != 1:
+                numErrors += 1
+
+        print("Number of Errors: %d\nNumber of samples: %d"%(numErrors, X.shape[1]))
+
+        percentError = numErrors / X.shape[1]
+
+        print("Percent Error: ", percentError)
+
+        return percentError
+
     def calculate_confusion_matrix(self,X,y):
         """
         Given a desired (true) output as one hot and the predicted output as one-hot,
@@ -169,31 +229,99 @@ class Hebbian(object):
         Confusion matrix should be shown as the number of times that
         an image of class n is classified as class m where 1<=n,m<=number_of_classes.
         """
+        confusion = np.zeros((self.number_of_classes, self.number_of_classes))
+
+        for sample in range(X.shape[1]):
+            # Get the nth column from both the input and expected output
+            sampleX = np.transpose(np.array([X[:, sample]]))
+            sampleY = np.transpose(np.array([y[sample]]))
+
+            # Convert the sample Y into a one hot vector or matrix
+            oneHot = self.toOneHot(sampleY)
+
+            results = self.predict(sampleX)
+
+            if self.transfer_function == "Hard_limit":
+                pass
+            elif self.transfer_function == "Linear":
+                results[np.where(results == np.max(results))] = 1
+                results[np.where(results != 1)] = 0
+            elif self.transfer_function == "Sigmoid":
+                pass
+
+            # Get what class predict thought it was
+            indices = np.where(results == 1)
+
+            if indices[0].size != 0:
+                predClass = indices[0][0]
+
+                if not np.array_equal(results, oneHot):
+                    confusion[sampleY[0], predClass] += 1
+                else:
+                    confusion[predClass, predClass] += 1
+
+        return confusion
+
+
+
+
+    def toOneHot(self, Y):
+        oneHot = np.zeros((self.number_of_classes, Y.shape[0]))
+
+        oneHot[Y, np.arange(Y.shape[0])] = 1
+
+        return oneHot
 
 
 
 if __name__ == "__main__":
 
-    # Read mnist data
-    number_of_classes = 10
-    number_of_training_samples_to_use = 700
-    number_of_test_samples_to_use = 100
-    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-    X_train_vectorized=((X_train.reshape(X_train.shape[0],-1)).T)[:,0:number_of_training_samples_to_use]
-    y_train = y_train[0:number_of_training_samples_to_use]
-    X_test_vectorized=((X_test.reshape(X_test.shape[0],-1)).T)[:,0:number_of_test_samples_to_use]
-    y_test = y_test[0:number_of_test_samples_to_use]
-    number_of_images_to_view=16
-    test_x=X_train_vectorized[:,0:number_of_images_to_view].T.reshape((number_of_images_to_view,28,28))
-    # display_images(test_x)
-    input_dimensions=X_test_vectorized.shape[0]
-    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
-                    transfer_function="Hard_limit",seed=5)
-    # model.initialize_all_weights_to_zeros()
-    # percent_error=[]
-    for k in range (10):
-        model.train(X_train_vectorized, y_train,batch_size=1, num_epochs=2, alpha=0.1,gamma=0.1,learning="Delta")
-    #     percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
-    # print("******  Percent Error ******\n",percent_error)
+    # # Read mnist data
+    # number_of_classes = 10
+    # number_of_training_samples_to_use = 1000
+    # number_of_test_samples_to_use = 100
+    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    # X_train_vectorized = ((X_train.reshape(X_train.shape[0], -1)).T)[:, 0:number_of_training_samples_to_use]
+    # y_train = y_train[0:number_of_training_samples_to_use]
+    # X_test_vectorized = ((X_test.reshape(X_test.shape[0], -1)).T)[:, 0:number_of_test_samples_to_use]
+    # y_test = y_test[0:number_of_test_samples_to_use]
+    # # number_of_images_to_view=16
+    # # test_x=X_train_vectorized[:,0:number_of_images_to_view].T.reshape((number_of_images_to_view,28,28))
+    # # display_images(test_x)
+    # input_dimensions = X_test_vectorized.shape[0]
+    # model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+    #                 transfer_function="Hard_limit", seed=8)
+    # print(model.calculate_percent_error(X_test_vectorized, y_test))
+    # # model.initialize_all_weights_to_zeros()
+    # # percent_error = []
+    # #
+    # # for k in range (10):
+    # #     model.train(X_train_vectorized, y_train, batch_size=300, num_epochs=2, alpha=0.1, gamma=0.1, learning="Delta")
+    # #     percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
+    # # print("******  Percent Error ******\n",percent_error)
+    #
     # confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
     # print(np.array2string(confusion_matrix, separator=","))
+
+
+
+
+
+    number_of_classes = 10
+    number_of_test_samples_to_use = 100
+    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    X_test_vectorized = ((X_test.reshape(X_test.shape[0], -1)).T)[:, 0:number_of_test_samples_to_use]
+    y_test = y_test[0:number_of_test_samples_to_use]
+    input_dimensions = X_test_vectorized.shape[0]
+
+    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+                    transfer_function="Hard_limit", seed=8)
+    print(model.calculate_percent_error(X_test_vectorized, y_test))
+
+    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+                    transfer_function="Linear", seed=15)
+    print(model.calculate_percent_error(X_test_vectorized, y_test))
+
+    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+                    transfer_function="Sigmoid", seed=5)
+    print(model.calculate_percent_error(X_test_vectorized, y_test))

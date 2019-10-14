@@ -71,14 +71,9 @@ class Perceptron(object):
         # Multiply the weight matrix, W, by the input matrix X
         results = np.dot(self.weights, newX)
 
-        for rowIndex, row in enumerate(results):
-            for columnIndex, column in enumerate(row):
-                if results[rowIndex][columnIndex] <= 0:
-                    results[rowIndex][columnIndex] = 0
-                else:
-                    results[rowIndex][columnIndex] = 1
+        hardLimResults = np.where(results < 0, 0, 1)
 
-        return results
+        return hardLimResults
 
     def calculate_percent_error(self, X, Y):
         numErrors = 0
