@@ -223,7 +223,6 @@ class MultiNN(object):
         the desired (true) class.
         :return percent_error
         """
-        # self.printWeights()
         result = self.predict(X).numpy()
 
         # Convert the sample Y into a one hot vector or matrix
@@ -261,6 +260,34 @@ class MultiNN(object):
         Confusion matrix should be shown as the number of times that
         an image of class n is classified as class m where 1<=n,m<=number_of_classes.
         """
+        confusion = np.zeros((self.weights[-1].shape[1], self.weights[-1].shape[1]))
+
+        result = self.predict(X).numpy()
+
+        # Convert the sample Y into a one hot vector or matrix
+        one_hot_expected = self.toOneHot(y).transpose()
+
+        # Find the index of the max value from each row
+        max_index = result.argmax(axis=1)
+
+        # Change the value of max value from each row to 1, and the rest to 0
+        one_hot_result = (max_index[:, None] == np.arange(result.shape[1])).astype(float)
+
+        # Each row is a sample
+        for sample in range(one_hot_result.shape[0]):
+            # Get what class predict thought it was
+            indices = np.where(one_hot_result[sample] == 1)
+
+            if indices[0].size != 0:
+                predClass = indices[0][0]
+
+                if not np.array_equal(one_hot_result[sample], one_hot_expected[sample]):
+                    confusion[y[0], predClass] += 1
+                else:
+                    confusion[predClass, predClass] += 1
+
+        return confusion
+
 
     def toOneHot(self, Y):
         oneHot = np.zeros((self.weights[-1].shape[1], Y.shape[0]))
@@ -301,6 +328,6 @@ if __name__ == "__main__":
     for k in range(10):
         multi_nn.train(X_train, y_train, batch_size=100, num_epochs=20, alpha=0.8)
         percent_error.append(multi_nn.calculate_percent_error(X_train, y_train))
-    # confusion_matrix = multi_nn.calculate_confusion_matrix(X_train, y_train)
+    confusion_matrix = multi_nn.calculate_confusion_matrix(X_train, y_train)
     print("Percent error: ", np.array2string(np.array(percent_error), separator=","))
-    # print("************* Confusion Matrix ***************\n", np.array2string(confusion_matrix, separator=","))
+    print("************* Confusion Matrix ***************\n", np.array2string(confusion_matrix, separator=","))
