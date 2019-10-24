@@ -199,9 +199,14 @@ class Hebbian(object):
             if self.transfer_function == "Hard_limit":
                 pass
             elif self.transfer_function == "Linear":
+                # print("results", results)
+
                 results[np.where(results == np.max(results))] = 1
                 results[np.where(results != 1)] = 0
+
+                # print("predict: ", results)
             elif self.transfer_function == "Sigmoid":
+                print("sigmoid", results)
                 results[np.where(results == np.max(results))] = 1
                 results[np.where(results != 1)] = 0
 
@@ -276,52 +281,55 @@ class Hebbian(object):
 
 if __name__ == "__main__":
 
-    # # Read mnist data
-    # number_of_classes = 10
-    # number_of_training_samples_to_use = 1000
-    # number_of_test_samples_to_use = 100
-    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-    # X_train_vectorized = ((X_train.reshape(X_train.shape[0], -1)).T)[:, 0:number_of_training_samples_to_use]
-    # y_train = y_train[0:number_of_training_samples_to_use]
-    # X_test_vectorized = ((X_test.reshape(X_test.shape[0], -1)).T)[:, 0:number_of_test_samples_to_use]
-    # y_test = y_test[0:number_of_test_samples_to_use]
-    # # number_of_images_to_view=16
-    # # test_x=X_train_vectorized[:,0:number_of_images_to_view].T.reshape((number_of_images_to_view,28,28))
-    # # display_images(test_x)
-    # input_dimensions = X_test_vectorized.shape[0]
-    # model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
-    #                 transfer_function="Hard_limit", seed=8)
-    # print(model.calculate_percent_error(X_test_vectorized, y_test))
-    # # model.initialize_all_weights_to_zeros()
-    # # percent_error = []
-    # #
-    # # for k in range (10):
-    # #     model.train(X_train_vectorized, y_train, batch_size=300, num_epochs=2, alpha=0.1, gamma=0.1, learning="Delta")
-    # #     percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
-    # # print("******  Percent Error ******\n",percent_error)
-    #
-    # confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
-    # print(np.array2string(confusion_matrix, separator=","))
-
-
-
-
-
+    # Read mnist data
     number_of_classes = 10
+    number_of_training_samples_to_use = 1000
     number_of_test_samples_to_use = 100
     (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    X_train_vectorized = ((X_train.reshape(X_train.shape[0], -1)).T)[:, 0:number_of_training_samples_to_use]
+    y_train = y_train[0:number_of_training_samples_to_use]
     X_test_vectorized = ((X_test.reshape(X_test.shape[0], -1)).T)[:, 0:number_of_test_samples_to_use]
     y_test = y_test[0:number_of_test_samples_to_use]
+    # number_of_images_to_view=16
+    # test_x=X_train_vectorized[:,0:number_of_images_to_view].T.reshape((number_of_images_to_view,28,28))
+    # display_images(test_x)
     input_dimensions = X_test_vectorized.shape[0]
-
     model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
                     transfer_function="Hard_limit", seed=8)
     print(model.calculate_percent_error(X_test_vectorized, y_test))
+    model.initialize_all_weights_to_zeros()
+    percent_error = []
 
-    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
-                    transfer_function="Linear", seed=15)
-    print(model.calculate_percent_error(X_test_vectorized, y_test))
+    for k in range (10):
+        model.train(X_train_vectorized, y_train, batch_size=300, num_epochs=2, alpha=0.1, gamma=0.1, learning="Delta")
+        percent_error.append(model.calculate_percent_error(X_test_vectorized,y_test))
+    print("******  Percent Error ******\n",percent_error)
 
-    model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
-                    transfer_function="Sigmoid", seed=5)
-    print(model.calculate_percent_error(X_test_vectorized, y_test))
+    confusion_matrix=model.calculate_confusion_matrix(X_test_vectorized,y_test)
+    print(np.array2string(confusion_matrix, separator=","))
+
+
+
+
+    #
+    # number_of_classes = 10
+    # number_of_test_samples_to_use = 100
+    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    # X_test_vectorized = ((X_test.reshape(X_test.shape[0], -1)).T)[:, 0:number_of_test_samples_to_use]
+    # y_test = y_test[0:number_of_test_samples_to_use]
+    # input_dimensions = X_test_vectorized.shape[0]
+    #
+    #
+    #
+    # model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+    #                 transfer_function="Hard_limit", seed=8)
+    #
+    # print(model.calculate_percent_error(X_test_vectorized, y_test))
+    #
+    # model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+    #                 transfer_function="Linear", seed=15)
+    # print(model.calculate_percent_error(X_test_vectorized, y_test))
+    #
+    # model = Hebbian(input_dimensions=input_dimensions, number_of_classes=number_of_classes,
+    #                 transfer_function="Sigmoid", seed=5)
+    # print(model.calculate_percent_error(X_test_vectorized, y_test))
