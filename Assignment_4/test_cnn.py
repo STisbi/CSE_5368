@@ -114,97 +114,97 @@ def test_get_weights_without_biases_3():
         # assert actual.shape == (previous_nodes, number_of_nodes)
         previous_nodes = number_of_nodes
 
-# def test_get_biases_1():
-#     my_cnn = CNN()
-#     input_size=np.random.randint(32,100)
-#     number_of_dense_layers=np.random.randint(2,10)
-#     my_cnn.add_input_layer(shape=input_size,name="input")
-#     previous_nodes=input_size
-#     for k in range(number_of_dense_layers):
-#         number_of_nodes = np.random.randint(3, 100)
-#         kernel_size= np.random.randint(3,9)
-#         my_cnn.append_dense_layer(num_nodes=number_of_nodes)
-#         actual = my_cnn.get_biases(layer_number=k+1)
-#         assert (actual.shape ==  (number_of_nodes,)) or (actual.shape ==  (number_of_nodes,1))
-#         previous_nodes=number_of_nodes
-#
-# def test_get_biases_2():
-#     my_cnn = CNN()
-#     image_size=(np.random.randint(32,100),np.random.randint(20,100),np.random.randint(3,10))
-#     number_of_conv_layers=np.random.randint(2,10)
-#     my_cnn.add_input_layer(shape=image_size,name="input")
-#     previous_depth=image_size[2]
-#     for k in range(number_of_conv_layers):
-#         number_of_filters = np.random.randint(3, 100)
-#         kernel_size= np.random.randint(3,9)
-#         my_cnn.append_conv2d_layer(num_of_filters=number_of_filters,
-#                                    kernel_size=(kernel_size,kernel_size),
-#                                    padding="same", activation='linear')
-#
-#         actual = my_cnn.get_biases(layer_number=k+1)
-#         assert (actual.shape == (number_of_filters,)) or (actual.shape == (number_of_filters,1))
-#         previous_depth=number_of_filters
-#     actual = my_cnn.get_biases(layer_number=0)
-#     assert actual is None
-#
-# def test_set_weights_without_biases():
-#     my_cnn = CNN()
-#     image_size = (np.random.randint(32, 100), np.random.randint(20, 100), np.random.randint(3, 10))
-#     number_of_conv_layers = np.random.randint(2, 10)
-#     my_cnn.add_input_layer(shape=image_size, name="input")
-#     previous_depth = image_size[2]
-#     for k in range(number_of_conv_layers):
-#         number_of_filters = np.random.randint(3, 100)
-#         kernel_size = np.random.randint(3, 9)
-#         my_cnn.append_conv2d_layer(num_of_filters=number_of_filters,
-#                                    kernel_size=(kernel_size, kernel_size),
-#                                    padding="same", activation='linear')
-#
-#         w = my_cnn.get_weights_without_biases(layer_number=k + 1)
-#         w_set=np.full_like(w,0.2)
-#         my_cnn.set_weights_without_biases(w_set,layer_number=k+1)
-#         w_get = my_cnn.get_weights_without_biases(layer_number=k + 1)
-#         assert w_get.shape == w_set.shape
-#         previous_depth = number_of_filters
-#     pool_size = np.random.randint(2, 5)
-#     my_cnn.append_maxpooling2d_layer(pool_size=pool_size, padding="same",
-#                                      strides=2, name="pool1")
-#     my_cnn.append_flatten_layer(name="flat1")
-#     my_cnn.append_dense_layer(num_nodes=10)
-#     number_of_dense_layers = np.random.randint(2, 10)
-#     previous_nodes = 10
-#     for k in range(number_of_dense_layers):
-#         number_of_nodes = np.random.randint(3, 100)
-#         kernel_size = np.random.randint(3, 9)
-#         my_cnn.append_dense_layer(num_nodes=number_of_nodes)
-#
-#         w = my_cnn.get_weights_without_biases(layer_number=k + number_of_conv_layers + 4)
-#         w_set = np.full_like(w, 0.8)
-#         my_cnn.set_weights_without_biases(w_set, layer_number=k + number_of_conv_layers + 4)
-#         w_get = my_cnn.get_weights_without_biases(layer_number=k + number_of_conv_layers + 4)
-#         assert w_get.shape == w_set.shape
-#         previous_nodes = number_of_nodes
-#
-# def test_load_and_save_model():
-#     # Note: This test may take a long time to load the data
-#     my_cnn = CNN()
-#     my_cnn.load_a_model(model_name="VGG19")
-#     # my_cnn.append_dense_layer(num_nodes=10)
-#     w=my_cnn.get_weights_without_biases(layer_name="block5_conv4")
-#     assert w.shape == (3,3,512,512)
-#     w = my_cnn.get_weights_without_biases(layer_number=-1)
-#     assert w.shape == (4096,1000)
-#     my_cnn.append_dense_layer(num_nodes=10)
-#     path = os.getcwd()
-#     file_path=os.path.join(path,"my_model.h5")
-#     my_cnn.save_model(model_file_name=file_path)
-#     my_cnn.load_a_model(model_name="VGG16")
-#     w = my_cnn.get_weights_without_biases(layer_name="block4_conv1")
-#     assert w.shape == (3, 3, 256, 512)
-#     my_cnn.load_a_model(model_file_name=file_path)
-#     os.remove(file_path)
-#     w = my_cnn.get_weights_without_biases(layer_number=-1)
-#     assert w.shape == (1000,10)
+def test_get_biases_1():
+    my_cnn = CNN()
+    input_size=np.random.randint(32,100)
+    number_of_dense_layers=np.random.randint(2,10)
+    my_cnn.add_input_layer(shape=input_size,name="input")
+    previous_nodes=input_size
+    for k in range(number_of_dense_layers):
+        number_of_nodes = np.random.randint(3, 100)
+        kernel_size= np.random.randint(3,9)
+        my_cnn.append_dense_layer(num_nodes=number_of_nodes)
+        actual = my_cnn.get_biases(layer_number=k+1)
+        assert (actual.shape ==  (number_of_nodes,)) or (actual.shape ==  (number_of_nodes,1))
+        previous_nodes=number_of_nodes
+
+def test_get_biases_2():
+    my_cnn = CNN()
+    image_size=(np.random.randint(32,100),np.random.randint(20,100),np.random.randint(3,10))
+    number_of_conv_layers=np.random.randint(2,10)
+    my_cnn.add_input_layer(shape=image_size,name="input")
+    previous_depth=image_size[2]
+    for k in range(number_of_conv_layers):
+        number_of_filters = np.random.randint(3, 100)
+        kernel_size= np.random.randint(3,9)
+        my_cnn.append_conv2d_layer(num_of_filters=number_of_filters,
+                                   kernel_size=(kernel_size,kernel_size),
+                                   padding="same", activation='linear')
+
+        actual = my_cnn.get_biases(layer_number=k+1)
+        assert (actual.shape == (number_of_filters,)) or (actual.shape == (number_of_filters,1))
+        previous_depth=number_of_filters
+    actual = my_cnn.get_biases(layer_number=0)
+    assert actual is None
+
+def test_set_weights_without_biases():
+    my_cnn = CNN()
+    image_size = (np.random.randint(32, 100), np.random.randint(20, 100), np.random.randint(3, 10))
+    number_of_conv_layers = np.random.randint(2, 10)
+    my_cnn.add_input_layer(shape=image_size, name="input")
+    previous_depth = image_size[2]
+    for k in range(number_of_conv_layers):
+        number_of_filters = np.random.randint(3, 100)
+        kernel_size = np.random.randint(3, 9)
+        my_cnn.append_conv2d_layer(num_of_filters=number_of_filters,
+                                   kernel_size=(kernel_size, kernel_size),
+                                   padding="same", activation='linear')
+
+        w = my_cnn.get_weights_without_biases(layer_number=k + 1)
+        w_set=np.full_like(w,0.2)
+        my_cnn.set_weights_without_biases(w_set,layer_number=k+1)
+        w_get = my_cnn.get_weights_without_biases(layer_number=k + 1)
+        assert w_get.shape == w_set.shape
+        previous_depth = number_of_filters
+    pool_size = np.random.randint(2, 5)
+    my_cnn.append_maxpooling2d_layer(pool_size=pool_size, padding="same",
+                                     strides=2, name="pool1")
+    my_cnn.append_flatten_layer(name="flat1")
+    my_cnn.append_dense_layer(num_nodes=10)
+    number_of_dense_layers = np.random.randint(2, 10)
+    previous_nodes = 10
+    for k in range(number_of_dense_layers):
+        number_of_nodes = np.random.randint(3, 100)
+        kernel_size = np.random.randint(3, 9)
+        my_cnn.append_dense_layer(num_nodes=number_of_nodes)
+
+        w = my_cnn.get_weights_without_biases(layer_number=k + number_of_conv_layers + 4)
+        w_set = np.full_like(w, 0.8)
+        my_cnn.set_weights_without_biases(w_set, layer_number=k + number_of_conv_layers + 4)
+        w_get = my_cnn.get_weights_without_biases(layer_number=k + number_of_conv_layers + 4)
+        assert w_get.shape == w_set.shape
+        previous_nodes = number_of_nodes
+
+def test_load_and_save_model():
+    # Note: This test may take a long time to load the data
+    my_cnn = CNN()
+    my_cnn.load_a_model(model_name="VGG19")
+    # my_cnn.append_dense_layer(num_nodes=10)
+    w=my_cnn.get_weights_without_biases(layer_name="block5_conv4")
+    assert w.shape == (3,3,512,512)
+    w = my_cnn.get_weights_without_biases(layer_number=-1)
+    assert w.shape == (4096,1000)
+    # my_cnn.append_dense_layer(num_nodes=10)
+    # path = os.getcwd()
+    # file_path=os.path.join(path,"my_model.h5")
+    # my_cnn.save_model(model_file_name=file_path)
+    # my_cnn.load_a_model(model_name="VGG16")
+    # w = my_cnn.get_weights_without_biases(layer_name="block4_conv1")
+    # assert w.shape == (3, 3, 256, 512)
+    # my_cnn.load_a_model(model_file_name=file_path)
+    # os.remove(file_path)
+    # w = my_cnn.get_weights_without_biases(layer_number=-1)
+    # assert w.shape == (1000,10)
 
 # def test_predict():
 #     # some of these may be duplicated

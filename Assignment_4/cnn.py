@@ -139,7 +139,16 @@ class CNN(object):
          :return: biases for the given layer (If the given layer does not have bias then None should be returned)
          """
 
-        return self.model.get_layer(index=layer_number-1, name=layer_name).get_weights()[1]
+        if layer_number != None:
+            if len(self.model.get_layer(index=layer_number - 1).get_weights()) <= 0 or layer_number == 0:
+                return None
+            else:
+                return self.model.get_layer(index=layer_number - 1).get_weights()[1]
+        else:
+            if len(self.model.get_layer(name=layer_name).get_weights()) <= 0:
+                return None
+            else:
+                return self.model.get_layer(name=layer_name).get_weights()[1]
 
     def set_weights_without_biases(self,weights,layer_number=None,layer_name=""):
         """
@@ -152,7 +161,7 @@ class CNN(object):
          :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
          :return: None
          """
-        keras.backend.set_value(self.model.get_layer(index=layer_number, name=layer_name).weights[0], weights)
+        keras.backend.set_value(self.model.get_layer(index=layer_number-1, name=layer_name).weights[0], weights)
 
     def set_biases(self,biases,layer_number=None,layer_name=""):
         """
@@ -164,7 +173,7 @@ class CNN(object):
         :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
         :return: none
         """
-        keras.backend.set_value(self.model.get_layer(index=layer_number, name=layer_name).weights[1], biases)
+        keras.backend.set_value(self.model.get_layer(index=layer_number-1, name=layer_name).weights[1], biases)
 
 
     def remove_last_layer(self):
@@ -187,8 +196,13 @@ class CNN(object):
          model_file_name are specified, model_name takes precedence).
         :return: model
         """
-        self.model = keras.models.load_models(filepatth=model_file_name)
-        self.model.name = model_name
+
+        if model_name == "VGG16":
+            self.model = keras.applications.vgg16.VGG16()
+        elif model_name == "VGG19":
+            self.model = keras.applications.vgg19.VGG19()
+        else:
+            self.model = keras.models.load_model(model_file_name)
 
     def save_model(self,model_file_name=""):
         """
@@ -196,7 +210,8 @@ class CNN(object):
         :param file_name: Name of file to save the model.
         :return: model
         """
-        self.model.save(model_file_name)
+
+        keras.models.save(model_file_name)
 
 
     def set_loss_function(self, loss="SparseCategoricalCrossentropy"):
