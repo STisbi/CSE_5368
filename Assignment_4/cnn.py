@@ -15,6 +15,12 @@ class CNN(object):
         Initialize multi-layer neural network
 
         """
+        self.model = keras.models.Sequential()
+        
+        self.weights = []
+        self.biases = []
+        self.activations = []
+        self.loss = None
 
 
     def add_input_layer(self, shape=(2,),name="" ):
@@ -25,6 +31,8 @@ class CNN(object):
          :param name: Layer name (string)
          :return: None
          """
+
+        self.model.add(keras.layers.InputLayer(input_shape=shape, name=name))
 
 
     def append_dense_layer(self, num_nodes,activation="relu",name="",trainable=True):
@@ -37,6 +45,8 @@ class CNN(object):
          :param trainable: Boolean
          :return: None
          """
+        self.model.add(keras.layers.Dense(num_nodes, activation=activation, name=name, trainable=trainable))
+
     def append_conv2d_layer(self, num_of_filters, kernel_size=3, padding='same', strides=1,
                          activation="Relu",name="",trainable=True):
         """
@@ -51,6 +61,12 @@ class CNN(object):
          :param trainable: Boolean
          :return: Layer object
          """
+        layer = keras.layers.Conv2D(filters=num_of_filters, kernel_size=kernel_size, padding=padding, strides=strides, activation=activation, name=name, trainable=trainable)
+
+        self.model.add(layer)
+
+        return layer
+
     def append_maxpooling2d_layer(self, pool_size=2, padding="same", strides=2,name=""):
         """
          This function adds a maxpool2d layer to the neural network
@@ -60,12 +76,24 @@ class CNN(object):
          :param name: Layer name (string)
          :return: Layer object
          """
+        layer = keras.layers.MaxPooling2D(pool_size=pool_size, padding=padding, strides=strides, name=name)
+
+        self.model.add(layer)
+
+        return layer
+
     def append_flatten_layer(self,name=""):
         """
          This function adds a flattening layer to the neural network
          :param name: Layer name (string)
          :return: Layer object
          """
+        layer = keras.layers.Flatten(name=name)
+
+        self.model.add(layer)
+
+        return layer
+
     def set_training_flag(self,layer_numbers=[],layer_names="",trainable_flag=True):
         """
         This function sets the trainable flag for a given layer
@@ -74,6 +102,11 @@ class CNN(object):
         :param trainable_flag: Set trainable flag
         :return: None
         """
+        if isinstance(layer_numbers, list):
+            for layer in layer_numbers:
+                self.model.get_layer(layer_number=layer, layer_name=layer_names[layer]).trainable = trainable_flag
+        else:
+            self.model.get_layer(layer_number=layer_numbers, layer_name=layer_names).trainable = trainable_flag
 
     def get_weights_without_biases(self,layer_number=None,layer_name=""):
         """
@@ -85,7 +118,16 @@ class CNN(object):
          :return: Weight matrix for the given layer (not including the biases). If the given layer does not have
           weights then None should be returned.
          """
-
+        if layer_number != None:
+            if len(self.model.get_layer(index=layer_number-1).get_weights()) <= 0 or layer_number == 0:
+                return None
+            else:
+                return self.model.get_layer(index=layer_number-1).get_weights()[0]
+        else:
+            if len(self.model.get_layer(name=layer_name).get_weights()) <= 0:
+                return None
+            else:
+                return self.model.get_layer(name=layer_name).get_weights()[0]
 
     def get_biases(self,layer_number=None,layer_name=""):
         """
@@ -96,6 +138,8 @@ class CNN(object):
          :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
          :return: biases for the given layer (If the given layer does not have bias then None should be returned)
          """
+
+        return self.model.get_layer(index=layer_number-1, name=layer_name).get_weights()[1]
 
     def set_weights_without_biases(self,weights,layer_number=None,layer_name=""):
         """
@@ -108,6 +152,8 @@ class CNN(object):
          :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
          :return: None
          """
+        keras.backend.set_value(self.model.get_layer(index=layer_number, name=layer_name).weights[0], weights)
+
     def set_biases(self,biases,layer_number=None,layer_name=""):
         """
         This function sets the biases for layer layer_number.
@@ -118,11 +164,19 @@ class CNN(object):
         :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
         :return: none
         """
+        keras.backend.set_value(self.model.get_layer(index=layer_number, name=layer_name).weights[1], biases)
+
+
     def remove_last_layer(self):
         """
         This function removes a layer from the model.
         :return: removed layer
         """
+        layer = self.model.layers[-1]
+
+        self.model.pop()
+
+        return layer
 
     def load_a_model(self,model_name="",model_file_name=""):
         """
@@ -133,12 +187,16 @@ class CNN(object):
          model_file_name are specified, model_name takes precedence).
         :return: model
         """
+        self.model = keras.models.load_models(filepatth=model_file_name)
+        self.model.name = model_name
+
     def save_model(self,model_file_name=""):
         """
         This function saves the current model architecture and weights together in a HDF5 file.
         :param file_name: Name of file to save the model.
         :return: model
         """
+        self.model.save(model_file_name)
 
 
     def set_loss_function(self, loss="SparseCategoricalCrossentropy"):
@@ -173,6 +231,7 @@ class CNN(object):
         :param X: Input tensor.
         :return: Output tensor.
         """
+        return self.model.predict(X)
 
     def evaluate(self,X,y):
         """
