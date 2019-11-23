@@ -118,11 +118,14 @@ class CNN(object):
          :return: Weight matrix for the given layer (not including the biases). If the given layer does not have
           weights then None should be returned.
          """
+
         if layer_number != None:
-            if len(self.model.get_layer(index=layer_number-1).get_weights()) <= 0 or layer_number == 0:
+            if len(self.model.layers[layer_number - 1].get_weights()) <= 0 or layer_number == 0:
                 return None
+            elif layer_number == -1:
+                return self.model.layers[layer_number].get_weights()[0]
             else:
-                return self.model.get_layer(index=layer_number-1).get_weights()[0]
+                return self.model.layers[layer_number - 1].get_weights()[0]
         else:
             if len(self.model.get_layer(name=layer_name).get_weights()) <= 0:
                 return None
@@ -142,8 +145,10 @@ class CNN(object):
         if layer_number != None:
             if len(self.model.get_layer(index=layer_number - 1).get_weights()) <= 0 or layer_number == 0:
                 return None
+            elif layer_number == -1:
+                return self.model.layers[layer_number].get_weights()[1]
             else:
-                return self.model.get_layer(index=layer_number - 1).get_weights()[1]
+                return self.model.layers[layer_number - 1].get_weights()[1]
         else:
             if len(self.model.get_layer(name=layer_name).get_weights()) <= 0:
                 return None
@@ -197,12 +202,17 @@ class CNN(object):
         :return: model
         """
 
+        self.model = keras.models.Sequential()
+
         if model_name == "VGG16":
-            self.model = keras.applications.vgg16.VGG16()
+            base_model = keras.applications.vgg16.VGG16()
         elif model_name == "VGG19":
-            self.model = keras.applications.vgg19.VGG19()
+            base_model = keras.applications.vgg19.VGG19()
         else:
-            self.model = keras.models.load_model(model_file_name)
+            base_model = keras.models.load_model(model_file_name)
+
+        for layer in base_model.layers:
+            self.model.add(layer)
 
     def save_model(self,model_file_name=""):
         """
@@ -211,7 +221,7 @@ class CNN(object):
         :return: model
         """
 
-        keras.models.save(model_file_name)
+        self.model.save(model_file_name)
 
 
     def set_loss_function(self, loss="SparseCategoricalCrossentropy"):
