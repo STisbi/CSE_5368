@@ -50,7 +50,7 @@ class CNN(object):
         self.model.add(keras.layers.Dense(num_nodes, activation=activation, name=name, trainable=trainable))
 
     def append_conv2d_layer(self, num_of_filters, kernel_size=3, padding='same', strides=1,
-                         activation="Relu",name="",trainable=True):
+                         activation="relu",name="",trainable=True):
         """
          This function adds a conv2d layer to the neural network
          :param num_of_filters: Number of nodes
@@ -194,11 +194,14 @@ class CNN(object):
         This function removes a layer from the model.
         :return: removed layer
         """
-        layer = self.model.layers[-1]
+        old_model = self.model
+        self.model = keras.models.Sequential()
 
-        self.model.pop()
+        # Note the underscore, .layers does not return the first InputLayer, ._layers does
+        for layer in old_model._layers[:-1]:
+            self.model.add(layer)
 
-        return layer
+        return old_model.layers[-1]
 
     def load_a_model(self,model_name="",model_file_name=""):
         """
