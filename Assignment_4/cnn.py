@@ -284,7 +284,6 @@ class CNN(object):
          :return: list of loss values. Each element of the list should be the value of loss after each epoch.
          """
 if __name__ == "__main__":
-
     my_cnn=CNN()
     print(my_cnn)
     my_cnn.add_input_layer(shape=(32,32,3),name="input")
