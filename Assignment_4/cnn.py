@@ -166,7 +166,10 @@ class CNN(object):
          :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
          :return: None
          """
-        keras.backend.set_value(self.model.get_layer(index=layer_number-1, name=layer_name).weights[0], weights)
+        if layer_number:
+            keras.backend.set_value(self.model.get_layer(index=layer_number-1).weights[0], weights)
+        else:
+            keras.backend.set_value(self.model.get_layer(name=layer_name).weights[0], weights)
 
     def set_biases(self,biases,layer_number=None,layer_name=""):
         """
@@ -178,7 +181,10 @@ class CNN(object):
         :param layer_name: Layer name (if both layer_number and layer_name are specified, layer number takes precedence).
         :return: none
         """
-        keras.backend.set_value(self.model.get_layer(index=layer_number-1, name=layer_name).weights[1], biases)
+        if layer_number:
+            keras.backend.set_value(self.model.get_layer(index=layer_number - 1).weights[1], biases)
+        else:
+            keras.backend.set_value(self.model.get_layer(name=layer_name).weights[1], biases)
 
 
     def remove_last_layer(self):
