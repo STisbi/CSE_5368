@@ -21,6 +21,8 @@ class CNN(object):
         self.biases = []
         self.activations = []
         self.loss = None
+        self.metric = None
+        self.optimizer = None
 
 
     def add_input_layer(self, shape=(2,),name="" ):
@@ -237,6 +239,7 @@ class CNN(object):
         "SparseCategoricalCrossentropy",  "MeanSquaredError", "hinge".
         :return: none
         """
+        self.loss = loss
 
     def set_metric(self,metric):
         """
@@ -245,6 +248,7 @@ class CNN(object):
         "accuracy", "mse".
         :return: none
         """
+        self.metric = metric
 
     def set_optimizer(self,optimizer="SGD",learning_rate=0.01,momentum=0.0):
         """
@@ -255,6 +259,14 @@ class CNN(object):
         :param momentum: Momentum
         :return: none
         """
+        if optimizer == "SGD":
+            self.optimizer = keras.optimizers.SGD(learning_rate=learning_rate, momentum=momentum)
+        elif optimizer == "RMSprop":
+            self.optimizer = keras.optimizers.RMSprop(learning_rate=learning_rate)
+        elif optimizer == "Adagrad":
+            self.optimizer = keras.optimizers.Adagrad(learning_rate=learning_rate)
+        else:
+            pass
 
     def predict(self, X):
         """
@@ -271,6 +283,8 @@ class CNN(object):
          :param y: Array of desired (target) outputs
          :return: loss value and metric value
          """
+        return self.model.evaluate(x=X, y=y)
+
     def train(self, X_train, y_train, batch_size, num_epochs):
         """
          Given a batch of data, and the necessary hyperparameters,
@@ -283,6 +297,10 @@ class CNN(object):
          :param num_epochs: Number of times training should be repeated over all input data
          :return: list of loss values. Each element of the list should be the value of loss after each epoch.
          """
+        self.model.compile(self.optimizer, loss=self.loss, metrics=[self.metric])
+
+        self.model.fit(x=X_train, y=y_train, batch_size=batch_size, epochs=num_epochs, verbose=1)
+
 if __name__ == "__main__":
     my_cnn=CNN()
     print(my_cnn)
